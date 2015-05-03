@@ -2,8 +2,6 @@
 #include <lib.h>
 #include <vm.h>
 #include <machine/spl.h>
-#include <syscall.h>
-
 
 static
 void
@@ -526,7 +524,10 @@ subpage_kfree(void *ptr)
 	}
 	pr->freelist_offset = offset;
 	pr->nfree++;
-
+	// kprintf("start!!!!!!!!!!!!!!!!!!!!!");
+	// kprintf("The page value is: %d\n", PAGE_SIZE);
+	// kprintf("The size value is: %d\n", sizes[blktype]);
+	// kprintf("The free value is: %d\n", pr->nfree);
 	assert(pr->nfree <= PAGE_SIZE / sizes[blktype]);
 	if (pr->nfree == PAGE_SIZE / sizes[blktype]) {
 		/* Whole page is free. */
@@ -560,7 +561,7 @@ kmalloc(size_t sz)
 
 		return (void *)address;
 	}
-	
+
 	return subpage_kmalloc(sz);
 }
 

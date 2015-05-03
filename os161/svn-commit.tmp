@@ -1,0 +1,10 @@
+
+--This line, and those below, will be ignored--
+
+M    kern/include/thread.h
+M    kern/include/syscall.h
+M    kern/main/process_create.c
+M    kern/main/menu.c
+M    kern/thread/thread.c
+M    kern/thread/synch.c
+M    kern/arch/mips/mips/syscall.c

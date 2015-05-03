@@ -72,7 +72,8 @@ cmd_progthread(void *ptr, unsigned long nargs)
 
 	strcpy(progname, args[0]);
 	kprintf("This is !!!!!!!!!!!!!! %s\n", progname);
-	result = runprogram(progname);
+	result = runprogram(progname, args, nargs);
+	kprintf("after runprogram\n");
 	if (result) {
 		kprintf("Running program %s failed: %s\n", args[0],
 			strerror(result));
@@ -99,22 +100,21 @@ int
 common_prog(int nargs, char **args)
 {
 	int result;
-	struct thread* to_wait = NULL;
+	int return_v;
+	struct thread* waiting = NULL;
 
 #if OPT_SYNCHPROBS
 	kprintf("Warning: this probably won't work with a "
 		"synchronization-problems kernel.\n");
 #endif
 
-	result = thread_fork(args[0] /* thread name */,
-			args /* thread arg */, nargs /* thread arg */,
-			cmd_progthread, &to_wait);
+	result = thread_fork(args[0] /* thread name */, args /* thread arg */, nargs /* thread arg */, cmd_progthread, &waiting);
 	if (result) {
 		kprintf("thread_fork failed: %s\n", strerror(result));
 		return result;
 	}
-	int return_value = 0;
-   	sys_waitpid(to_wait->pid,&return_value,0);
+	int return_number = 0;
+   	sys_waitpid(waiting->pid,&return_number,0, &return_v);
 
 	return 0;
 }
@@ -831,12 +831,14 @@ void
 menu(char *args)
 {
 	char buf[64];
-
+	int iteration=0;
 	menu_execute(args, 1);
-
+	
 	while (1) {
+		//kprintf("iteration: %d\n",iteration);
 		kprintf("OS/161 kernel [? for menu]: ");
 		kgets(buf, sizeof(buf));
 		menu_execute(buf, 0);
+		iteration++;
 	}
 }

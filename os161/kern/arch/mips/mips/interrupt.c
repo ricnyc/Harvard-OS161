@@ -21,8 +21,6 @@ mips_interrupt(u_int32_t cause)
 	int old_in = in_interrupt;
 	in_interrupt = 1;
 
-	DEBUG(DB_INTERRUPT, "The current interrupt is %u ; the previous one was %u\n", cause, old_in);
-
 	/* interrupts should be off */
 	assert(curspl>0);
 

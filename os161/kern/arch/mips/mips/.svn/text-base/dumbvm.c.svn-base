@@ -24,6 +24,8 @@ vm_bootstrap(void)
 	/* Do nothing. */
 }
 
+/* This function is for allocating physical memory prior to VM
+ * initialization.*/
 static
 paddr_t
 getppages(unsigned long npages)
@@ -62,8 +64,8 @@ free_kpages(vaddr_t addr)
 int
 vm_fault(int faulttype, vaddr_t faultaddress)
 {
-	vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;
-	paddr_t paddr;
+	vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;/*virtual address space*/
+	paddr_t paddr;/*physical address space*/
 	int i;
 	u_int32_t ehi, elo;
 	struct addrspace *as;
@@ -71,12 +73,12 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	spl = splhigh();
 
-	faultaddress &= PAGE_FRAME;
+	faultaddress &= PAGE_FRAME; /*bitwise and*/ /*PAGE_FRAME = 0xfffff000 mask for getting page number from addr */
 
-	DEBUG(DB_VM, "dumbvm: fault: 0x%x\n", faultaddress);
+	DEBUG(DB_VM, "dumbvm: fault: 0x%x\n", faultaddress); /*DB_VM is defined and turned on/off in menu.c*/
 
 	switch (faulttype) {
-	    case VM_FAULT_READONLY:
+	    case VM_FAULT_READONLY: /*doesn't actually handle anything */
 		/* We always create pages read-write, so we can't get this */
 		panic("dumbvm: got VM_FAULT_READONLY\n");
 	    case VM_FAULT_READ:
@@ -116,9 +118,9 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	vbase2 = as->as_vbase2;
 	vtop2 = vbase2 + as->as_npages2 * PAGE_SIZE;
 	stackbase = USERSTACK - DUMBVM_STACKPAGES * PAGE_SIZE;
-	stacktop = USERSTACK;
+	stacktop = USERSTACK; /*USERSTACK = MIPS_KSEG0 = 0x80000000 */
 
-	if (faultaddress >= vbase1 && faultaddress < vtop1) {
+	if (faultaddress >= vbase1 && faultaddress < vtop1) { /*maps virtual addr to physical, although not specified but i think it functions as a three-page page table*/
 		paddr = (faultaddress - vbase1) + as->as_pbase1;
 	}
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
@@ -136,12 +138,12 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	assert((paddr & PAGE_FRAME)==paddr);
 
 	for (i=0; i<NUM_TLB; i++) {
-		TLB_Read(&ehi, &elo, i);
+		TLB_Read(&ehi, &elo, i); /*TLB_Read: read a TLB entry out of the TLB into ENTRYHI and ENTRYLO. INDEX specifies which one to get.*/
 		if (elo & TLBLO_VALID) {
 			continue;
 		}
 		ehi = faultaddress;
-		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+		elo = paddr | TLBLO_DIRTY | TLBLO_VALID; /*TLBLO_VALID = 0x00000200*/ /*TLBLO_DIRTY = 0x00000400*/ /*dirty = write privilege*/
 		DEBUG(DB_VM, "dumbvm: 0x%x -> 0x%x\n", faultaddress, paddr);
 		TLB_Write(ehi, elo, i);
 		splx(spl);
@@ -195,7 +197,7 @@ as_activate(struct addrspace *as)
 }
 
 int
-as_define_region(struct addrspace *as, vaddr_t vaddr, size_t sz,
+as_define_region(struct addrspace *as, vaddr_t vaddr, size_t sz, /* Set up a segment at virtual address VADDR of size sz. */
 		 int readable, int writeable, int executable)
 {
 	size_t npages; 
@@ -234,7 +236,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t sz,
 }
 
 int
-as_prepare_load(struct addrspace *as)
+as_prepare_load(struct addrspace *as) /*preparation before load instruction to see if the getpage execution works*/
 {
 	assert(as->as_pbase1 == 0);
 	assert(as->as_pbase2 == 0);
@@ -289,7 +291,7 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 	new->as_vbase2 = old->as_vbase2;
 	new->as_npages2 = old->as_npages2;
 
-	if (as_prepare_load(new)) {
+	if (as_prepare_load(new)) { /*if return value is not zero, which means error happens, destroy it and return error*/
 		as_destroy(new);
 		return ENOMEM;
 	}
@@ -313,3 +315,5 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 	*ret = new;
 	return 0;
 }
+
+

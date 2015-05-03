@@ -30,5 +30,4 @@ int scheduler_preallocate(int numthreads);
 void scheduler_killall(void);
 void scheduler_shutdown(void);
 
-
 #endif /* _SCHEDULER_H_ */

@@ -86,8 +86,7 @@ load_segment(struct vnode *v, off_t offset, vaddr_t vaddr,
  *
  * Returns the entry point (initial PC) for the program in ENTRYPOINT.
  */
-int
-load_elf(struct vnode *v, vaddr_t *entrypoint)
+int load_elf(struct vnode *v, vaddr_t *entrypoint)
 {
 	Elf_Ehdr eh;   /* Executable header */
 	Elf_Phdr ph;   /* "Program header" = segment header */
@@ -131,7 +130,6 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	    eh.e_version != EV_CURRENT ||
 	    eh.e_type!=ET_EXEC ||
 	    eh.e_machine!=EM_MACHINE) {
-		DEBUG(DB_EXEC, "ELF: Error; not a 32-bit ELF.\n");
 		return ENOEXEC;
 	}
 
@@ -149,7 +147,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	 * might have a larger structure, so we must use e_phentsize
 	 * to find where the phdr starts.
 	 */
-
+	 int iteration = 0;
 	for (i=0; i<eh.e_phnum; i++) {
 		off_t offset = eh.e_phoff + i*eh.e_phentsize;
 		mk_kuio(&ku, &ph, sizeof(ph), offset, UIO_READ);
@@ -180,13 +178,14 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 					  ph.p_vaddr, ph.p_memsz,
 					  ph.p_flags & PF_R,
 					  ph.p_flags & PF_W,
-					  ph.p_flags & PF_X);
+					  ph.p_flags & PF_X, iteration);
 		if (result) {
 			return result;
 		}
+		iteration++;
 	}
 
-	result = as_prepare_load(curthread->t_vmspace);
+	result = as_prepare_load(curthread->t_vmspace,v);
 	if (result) {
 		return result;
 	}

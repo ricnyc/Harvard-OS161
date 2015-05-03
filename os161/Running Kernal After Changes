@@ -1,34 +1,34 @@
 set path=( /cad2/ece344s/cs161/bin $path)
 cd ~/ece344/os161/kern/conf
-./config ASST2
+./config ASST3
 cd ..
-cd compile/ASST2
+cd compile/ASST3
 make depend
 make
 make install
 cd ~/ece344/root
 sys161 kernel
 cd ~/ece344/root
-os161-tester 2
+os161-tester 3
 
 
 set path=( /cad2/ece344s/cs161/bin $path)
 cd ~/ece344/os161/kern/conf
-./config ASST2
+./config ASST3
 cd ..
-cd compile/ASST2
+cd compile/ASST3
 make depend
 make
 make install
 cd ~/ece344/root
-os161-tester 2
+os161-tester 3
  p /testbin/argtest
 
 
 
   (In the run window:)
-  % cd ~/ece344/root
-  % sys161 -w kernel
+  cd ~/ece344/root
+  sys161 -w kernel
 
   (In the debug window:)
   % cd ~/ece344/root
@@ -41,3 +41,5 @@ os161-tester 2
      [displays a nice back trace...]
   (gdb) detach
   (gdb) quit
+
+

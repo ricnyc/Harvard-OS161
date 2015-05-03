@@ -26,9 +26,9 @@ int T[Dim][Dim][Dim];
 
 int
 main()
-{
+{	
     int i, j, k, r;
-
+	printf("\n&&&&&&&&&\n");
     for (i = 0; i < Dim; i++)		/* first initialize the matrices */
 	for (j = 0; j < Dim; j++) {
 	     A[i][j] = i;

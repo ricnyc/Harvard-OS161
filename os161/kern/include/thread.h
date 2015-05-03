@@ -9,9 +9,12 @@
 #include <machine/pcb.h>
 
 
+#define PROCESS_RUNNING 1
+#define PROCESS_STOP 0
+#define MAXPID 500
+#define MINPID 101
+ 
 struct addrspace;
-
-
 
 struct thread {
 	/**********************************************************/
@@ -22,9 +25,11 @@ struct thread {
 	char *t_name;
 	const void *t_sleepaddr;
 	char *t_stack;
-	
-	pid_t pid;		/* current process ID */
-	struct process* ptr;
+	//The id of matching process 
+    	pid_t pid; 
+    	//the pointer to process data structure
+    	struct process* array_ptr; 
+
 	/**********************************************************/
 	/* Public thread members - can be used by other code      */
 	/**********************************************************/
@@ -41,34 +46,25 @@ struct thread {
 	 * and is manipulated by the virtual filesystem (VFS) code.
 	 */
 	struct vnode *t_cwd;
-
-	
-	//pid_t ppid;		/* Parent Process ID */
-
 };
 
-/*struct process_table_entry{
-	struct process * procs;
-        pid_t pid;
-	struct process_table_entry * next;
-};*/
 
 struct process {
-	pid_t pid;
- 	pid_t ppid;
-	int status;
-	int exitcode;
-        
-	//struct semaphore* exitsem;
-	struct process* next;
-        struct thread* thread_ptr;
-	struct cv* wait_cv;
+  int status;
+  int exitcode;
+  pid_t pid;
+  pid_t ppid;
+  struct thread* process_ptr;
+  struct cv* array_cv;
 };
 
-//extern struct process_table_entry *process_table;
-struct lock* pid_list_lock;
-struct process* pid_list_head;
-struct process* pid_list_tail;
+struct lock* process_lock;
+
+struct process** array_table;
+
+struct thread * child_process(struct thread *thread);
+struct thread * init_process(struct thread *thread);
+pid_t next_pid (void);
 
 /* Call once during startup to allocate data structures. */
 struct thread *thread_bootstrap(void);
@@ -115,11 +111,13 @@ void thread_yield(void);
  */
 void thread_sleep(const void *addr);
 
+static void thread_destroy(struct thread *thread);
 /*
  * Cause all threads sleeping on the specified address to wake up.
  * Interrupts must be disabled.
  */
 void thread_wakeup(const void *addr);
+void wakeup_single_thread(const void *addr);
 
 /*
  * Return nonzero if there are any threads sleeping on the specified
@@ -136,12 +134,4 @@ int thread_hassleepers(const void *addr);
 void mi_threadstart(void *data1, unsigned long data2, 
 		    void (*func)(void *, unsigned long));
 
-/* Machine dependent context switch. */
-void md_switch(struct pcb *old, struct pcb *nu);
-
-pid_t givepid(void);
-
-void init_process(struct thread *t, pid_t id);
-
-
-#endif /* _THREAD_H_ */
+ #endif /* _THREAD_H_ */

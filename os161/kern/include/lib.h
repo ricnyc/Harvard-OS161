@@ -52,6 +52,7 @@
 
 extern u_int32_t dbflags;
 
+
 /*
  * DEBUG() is for conditionally printing debug messages to the console.
  *
@@ -202,6 +203,7 @@ int copyoutstr(const char *src, userptr_t userdest, size_t len, size_t *got);
 extern int lbolt;
 void clocksleep(int seconds);
 
+void hello(void);
 /*
  * Other miscellaneous stuff
  */

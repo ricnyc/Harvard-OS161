@@ -147,8 +147,7 @@ void lock_acquire(struct lock *lock)
 
 void
 lock_release(struct lock *lock)
-{
-	// Write this
+{	// Write this
 	assert(lock != NULL);
 	//assert(lock_do_i_hold(lock));
 	int spl;
@@ -159,7 +158,9 @@ lock_release(struct lock *lock)
 	thread_wakeup(lock);	
 	lock->pointer = NULL;
 	splx(spl);
-	(void)lock;  // suppress warning until code gets written
+//	(void)lock;  // suppress warning until code gets written
+
+
 }
 
 int
@@ -238,7 +239,8 @@ cv_signal(struct cv *cv, struct lock *lock)
 
 	int spl;
 	spl = splhigh();
-	one_thread_wakeup(cv);
+	//one_thread_wakeup(cv);
+	wakeup_single_thread(cv);
 	splx(spl);
 	// Write this
 	(void)cv;    // suppress warning until code gets written

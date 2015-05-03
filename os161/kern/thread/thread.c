@@ -4,6 +4,7 @@
 #include <types.h>
 #include <lib.h>
 #include <kern/errno.h>
+#include <kern/unistd.h>
 #include <array.h>
 #include <machine/spl.h>
 #include <machine/pcb.h>
@@ -13,6 +14,7 @@
 #include <addrspace.h>
 #include <vnode.h>
 #include "opt-synchprobs.h"
+#include <synch.h>
 
 /* States a thread can be in. */
 typedef enum {
@@ -34,65 +36,21 @@ static struct array *zombies;
 /* Total number of outstanding threads. Does not count zombies[]. */
 static int numthreads;
 
-//Temp
-//static struct thread *menuthread;
+//Chck the init process or current process
+static int first = 1;
 
-/*
- * Create a thread. This is used both to create the first thread's 
- * thread structure and to create subsequent threads.
- */
 
-/*struct process_table_entry *process_table = NULL;
-
-int proc_count = 0;
-
-pid_t givepid(void) {
-
-	if(process_table == NULL){
-
-		proc_count = 1;
-		process_table = (struct process_table_entry *)kmalloc(sizeof(struct process_table_entry));
-		process_table->next = NULL;
-		process_table->pid = 1;
-		process_table->procs = (struct process *) kmalloc(sizeof(struct process));
-
-	}
-	//	pid_t pid = PID_MIN;
-	//	while (process_table[pid] != NULL ) {
-	//		pid++;
-	//	}
-	return ++proc_count;
-}
-
-void init_process(struct thread *t, pid_t id) {
-	struct process *temp;
-	temp = (struct process *) kmalloc(sizeof(struct process));
-	temp->ppid = t->ppid;
-	////temp->ppid = t->pid;
-	temp->exited = 0;
-	temp->exitcode = 0;
-	temp->thread_for_process = t;
-	struct semaphore *sem;
-	sem = sem_create("Child", 0);
-	temp->exitsem = sem;
-	//process_table[id] = temp;
-	struct process_table_entry * temp1;
-	for(temp1=process_table;temp1->next!=NULL;temp1=temp1->next);
-	temp1->next = (struct process_table_entry *)kmalloc(sizeof(struct process_table_entry));
-	temp1->next->next = NULL;
-	temp1->next->procs = temp;
-	temp1->next->pid = id;
-}*/
 
 
 static
 struct thread *
 thread_create(const char *name)
 {
+
+
 	struct thread *thread = kmalloc(sizeof(struct thread));
 	if (thread==NULL) {
-		//return NULL;
-		return ENOMEM;
+		return NULL;
 	}
 	thread->t_name = kstrdup(name);
 	if (thread->t_name==NULL) {
@@ -105,21 +63,18 @@ thread_create(const char *name)
 	thread->t_vmspace = NULL;
 
 	thread->t_cwd = NULL;
+
+	if(first == 1){
+     	return init_process(thread);
+	 }
+	 else{	 	  
+		return child_process(thread);
+	 }
 	
 	// If you add things to the thread structure, be sure to initialize
 	// them here.
-	thread->pid = 0;
-  	thread->ptr = NULL;
-
-	DEBUG(DB_THREADS, "The number of threads is now %d plus %d zombies\n", numthreads, array_getnum(zombies) );
-	//thread->ppid = 2;
-	//pid_t id = givepid();//create table entry
-	//if(id > PID_MAX){
-	//	return NULL;
-	//}
-	//thread->pid=id;
-	//init_process(thread,id);
-	return thread;
+	
+	//return thread;
 }
 
 /*
@@ -215,7 +170,6 @@ void
 thread_panic(void)
 {
 	assert(curspl > 0);
-
 	thread_killall();
 	scheduler_killall();
 }
@@ -225,8 +179,19 @@ thread_panic(void)
  */
 struct thread *
 thread_bootstrap(void)
-{
+{	kprintf("inside bootstrap\n");
 	struct thread *me;
+
+
+	array_table = kmalloc((MAXPID + 1)*sizeof(struct process*));
+	if (array_table==NULL) {
+    	kprintf("Inside boot strap!");
+	}
+	int i;
+	for(i = 0; i < MAXPID; i++){
+		array_table[i] = NULL;
+	}
+
 
 	/* Create the data structures we need. */
 	sleepers = array_create();
@@ -248,45 +213,7 @@ thread_bootstrap(void)
 		panic("thread_bootstrap: Out of memory\n");
 	}
 
-	/*
-	 * Leave me->t_stack NULL. This means we're using the boot stack,
-	 * which can't be freed.
-	 */
-
-
-if (pid_list_lock == NULL) {
-    pid_list_lock = lock_create("pid_list_lock");
-    if (pid_list_lock == NULL) {
-      kfree(me);
-      panic("syscall: lock_create failed\n");
-    }
-  }
-
-  struct process* temp = kmalloc(sizeof(struct process));
-  if (temp == NULL) {
-    kfree(me);
-    panic("thread_bootstrap: Out of memory\n");
-  }
-  temp->wait_cv = cv_create("wait_cv");
-  if (temp->wait_cv == NULL) {
-    kfree(me);
-    kfree(temp);
-    panic("thread_bootstrap: create_cv failed\n");
-  }
-
-  temp->pid = 101;
-  temp->ppid = 100;
-  temp->status = 1;
-  temp->exitcode = 0; // Should the exitcode be 0 here?
-  temp->thread_ptr = me;
-  temp->next = NULL;
-  pid_list_head = temp;
-  pid_list_tail = temp;
-  me->ptr = temp;
-  me->pid = 101;
-
-
-
+  	first = 0;
 	/* Initialize the first thread's pcb */
 	md_initpcb0(&me->t_pcb);
 
@@ -325,6 +252,7 @@ thread_fork(const char *name,
 	    void (*func)(void *, unsigned long),
 	    struct thread **ret)
 {
+
 	struct thread *newguy;
 	int s, result;
 
@@ -335,46 +263,19 @@ thread_fork(const char *name,
 	}
 
 	/* Allocate a stack */
-	newguy->t_stack = kmalloc(STACK_SIZE);
+	newguy->t_stack = (char*)kmalloc(STACK_SIZE);
 	if (newguy->t_stack==NULL) {
 		kfree(newguy->t_name);
 		kfree(newguy);
 		return ENOMEM;
 	}
-	
+
 	/* stick a magic number on the bottom end of the stack */
 	newguy->t_stack[0] = 0xae;
 	newguy->t_stack[1] = 0x11;
 	newguy->t_stack[2] = 0xda;
 	newguy->t_stack[3] = 0x33;
-	struct process* temp = kmalloc(sizeof(struct process)); 	 	
-	  if (temp == NULL) { 	 	
-	    kfree(newguy->t_name); 	 	
-	    kfree(newguy); 	 	
-	    //kprintf("thread_fork 3\n"); 	 	
-	    return ENOMEM; 	 	
-	  } 	 	
-	  temp->wait_cv = cv_create("wait_cv"); 	 	
-	 if (temp->wait_cv == NULL) { 	 	
-	    kfree(temp); 	 	
-	    kfree(newguy->t_name); 	 	
-	    kfree(newguy); 	 	
-	    kprintf("thread_fork 4\n"); 	 	
-	   return ENOMEM; 	 	
-	  } 	 		  
-	  lock_acquire(pid_list_lock); 	 	
-	  temp->pid = pid_list_tail->pid+1; 	 	
-	  temp->ppid = curthread->pid; 	 	
-	  temp->status = 1; 	 	
-	  temp->exitcode = 0; 	 	
-	  temp->thread_ptr = newguy; 	 	
-	  temp->next = NULL; 	 	
-	  pid_list_tail->next = temp; 	 	
-	  pid_list_tail = pid_list_tail->next; 	 	
-	  newguy->ptr = temp; 	 	
-	  newguy->pid = temp->pid; 	 	
-	  lock_release(pid_list_lock); 
-	
+
 	/* Inherit the current directory */
 	if (curthread->t_cwd != NULL) {
 		VOP_INCREF(curthread->t_cwd);
@@ -407,9 +308,6 @@ thread_fork(const char *name,
 	}
 
 	/* Make the new thread runnable */
-
-	// Temp
-	//menuthread = curthread;
 	result = make_runnable(newguy);
 	if (result != 0) {
 		goto fail;
@@ -443,9 +341,11 @@ thread_fork(const char *name,
 	if (newguy->t_cwd != NULL) {
 		VOP_DECREF(newguy->t_cwd);
 	}
+  ///kfree(temp);
 	kfree(newguy->t_stack);
 	kfree(newguy->t_name);
 	kfree(newguy);
+  	//as_destroy(newguy);
 
 	return result;
 }
@@ -453,7 +353,9 @@ thread_fork(const char *name,
 /*
  * High level, machine-independent context switch code.
  */
-static void mi_switch(threadstate_t nextstate)
+static
+void
+mi_switch(threadstate_t nextstate)
 {
 	struct thread *cur, *next;
 	int result;
@@ -504,18 +406,13 @@ static void mi_switch(threadstate_t nextstate)
 	else {
 		assert(nextstate==S_ZOMB);
 		result = array_add(zombies, cur);
-		// Remove current from runqueue
 	}
-
 	assert(result==0);
 
 	/*
 	 * Call the scheduler (must come *after* the array_adds)
 	 */
 
-	// Temp
-	//if (nextstate == S_ZOMB) next = menuthread;
-	//else 
 	next = scheduler();
 
 	/* update curthread */
@@ -551,14 +448,54 @@ static void mi_switch(threadstate_t nextstate)
  */
 void
 thread_exit(void)
-{	//kprintf("exit Now!!!!!!!!!!!!!\n");
-	 remove_all_exited_children(curthread->pid);
-	 lock_acquire(pid_list_lock);
-   	 struct process* curr = curthread->ptr;
-   	 struct process* parent = get_process(curr->ppid);
-    	 if (parent != NULL) cv_signal(curr->wait_cv, pid_list_lock);
-    	 lock_release(pid_list_lock);
-		//kprintf("thread_start start!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+{
+	//////////////////////////////////free memory
+	int n[20]; /* n is an array of 10 integers */
+	int parent_pid = curthread->pid;
+	assert(parent_pid >= MINPID && parent_pid <= MAXPID);
+	int i;
+	int j = 0;
+	for(i = MINPID; i <= MAXPID; i++){
+		if(array_table[i] == NULL){
+			//skip
+		}
+		else if(array_table[i]->ppid == parent_pid && array_table[i]->status == PROCESS_STOP){
+			//kprintf("!!!!!!!!!!!11\n");
+			n[j] = array_table[i]->pid;
+			//kprintf("inside value: %d\n", n[j]);
+			j++;
+			cv_destroy(array_table[i]->array_cv);
+			kfree(array_table[i]);
+			array_table[i] = NULL;
+		}
+	}
+
+
+	////////////////////////////////////free memory
+	//second checking
+	// kprintf("inside the loop\n");
+	// int str;
+	// for(str = 0; str < j; str++){
+	// 	kprintf("inside value: %d\n", n[str]);
+	// }
+	// int str;
+	// for(str = 0; str < j; str++){
+	// 	for(i = MINPID; i <= MAXPID; i++){
+	// 		if(array_table[i] == NULL){
+	// 			//skip
+	// 		}
+	// 		else if(array_table[i]->ppid == n[str] && array_table[i]->status == PROCESS_STOP){
+	// 			kprintf("????????????22");
+	// 			cv_destroy(array_table[i]->array_cv);
+	// 			kfree(array_table[i]);
+	// 			array_table[i] = NULL;
+	// 		}
+	// 	}
+	// }
+
+
+    lock_release(process_lock);
+
 	if (curthread->t_stack != NULL) {
 		/*
 		 * Check the magic number we put on the bottom end of
@@ -574,14 +511,31 @@ thread_exit(void)
 	}
 
 	splhigh();
-
+	//array_table[curthread->pid] = NULL;
 	if (curthread->t_vmspace) {
 		/*
 		 * Do this carefully to avoid race condition with
 		 * context switch code.
 		 */
 		struct addrspace *as = curthread->t_vmspace;
+		//struct process * mother=curthread->array_ptr;
+		// pid_t temp = curthread->pid;//new added
+
+		// assert(MINPID <= temp && temp <= MAXPID);
+		// 	if(array_table[temp]!=NULL && array_table[temp]->status==PROCESS_STOP){
+		// 		//kfree(curthread->array_ptr);
+				
+		// 		kfree(array_table[temp]);
+		// 		array_table[temp]=NULL;
+				
+		// 	}
+
+
+	
+
+
 		curthread->t_vmspace = NULL;
+
 		as_destroy(as);
 	}
 
@@ -592,9 +546,8 @@ thread_exit(void)
 
 	assert(numthreads>0);
 	numthreads--;
-
 	mi_switch(S_ZOMB);
-
+	
 	panic("Thread came back from the dead!\n");
 }
 
@@ -624,15 +577,32 @@ thread_yield(void)
  * end up sleeping forever), and (2) you cannot sleep in an 
  * interrupt handler.
  */
-void
-thread_sleep(const void *addr)
-{
+void thread_sleep(const void *addr) {
 	// may not sleep in an interrupt handler
 	assert(in_interrupt==0);
 	
 	curthread->t_sleepaddr = addr;
 	mi_switch(S_SLEEP);
 	curthread->t_sleepaddr = NULL;
+}
+
+void
+thread_single_wakeup(const void *addr)
+{
+	int i, result;
+	assert(curspl>0);
+	
+	for (i=0; i<array_getnum(sleepers); i++) {
+		struct thread *t = array_getguy(sleepers, i);
+		if (t->t_sleepaddr == addr) {
+			
+			array_remove(sleepers, i);
+			
+			result = make_runnable(t);
+			assert(result==0);
+      break;
+		}
+	}
 }
 
 /*
@@ -668,12 +638,11 @@ thread_wakeup(const void *addr)
 		}
 	}
 }
-/*
- * Wake up one threads who are sleeping on "sleep address"
- * ADDR.
- */
+
+
+
 void
-one_thread_wakeup(const void *addr)
+wakeup_single_thread(const void *addr)
 {
 	int i, result;
 	
@@ -698,10 +667,12 @@ one_thread_wakeup(const void *addr)
 			 */
 			result = make_runnable(t);
 			assert(result==0);
+			break;
 		}
-		break;
 	}
 }
+
+
 /*
  * Return nonzero if there are any threads who are sleeping on "sleep address"
  * ADDR. This is meant to be used only for diagnostic purposes.
@@ -732,7 +703,6 @@ void
 mi_threadstart(void *data1, unsigned long data2, 
 	       void (*func)(void *, unsigned long))
 {
-	//kprintf("thread_start start!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 	/* If we have an address space, activate it */
 	if (curthread->t_vmspace) {
 		as_activate(curthread->t_vmspace);
@@ -751,12 +721,26 @@ mi_threadstart(void *data1, unsigned long data2,
 		}
 	}
 #endif
-
+	
 	/* Call the function */
 	func(data1, data2);
 
 	/* Done. */
 	thread_exit();
 }
+
+
+
+
+
+////////////////////////////////////////////////////////////////
+//EXECV////
+////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 

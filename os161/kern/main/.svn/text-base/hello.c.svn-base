@@ -1,4 +1,9 @@
+/** Hello **/
+
+#include <types.h>
 #include <hello.h>
-void hello(void){
-	kprintf("Hello World\n");
+#include <lib.h>
+
+void hello (void){
+     kprintf("Hello World\n");
 }

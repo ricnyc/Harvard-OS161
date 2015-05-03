@@ -16,8 +16,7 @@
 #include <vm.h>
 #include <syscall.h>
 #include <version.h>
-
-#include "hello.h"
+#include <hello.h>
 
 /*
  * These two pieces of data are maintained by the makefiles and build system.
@@ -62,17 +61,14 @@ boot(void)
 	 * anything at all. You can make it larger though (it's in
 	 * dev/generic/console.c).
 	 */
-
+        hello();
 	kprintf("\n");
 	kprintf("OS/161 base system version %s\n", BASE_VERSION);
 	kprintf("%s", harvard_copyright);
 	kprintf("\n");
 
-	kprintf("007's system version %s (%s #%d)\n", 
+	kprintf("Put-your-group-name-here's system version %s (%s #%d)\n", 
 		GROUP_VERSION, buildconfig, buildversion);
-	kprintf("\n");
-
-	hello();
 	kprintf("\n");
 
 	ram_bootstrap();
@@ -86,7 +82,7 @@ boot(void)
 	/* Default bootfs - but ignore failure, in case emu0 doesn't exist */
 	vfs_setbootfs("emu0");
 
-
+	hello(); 
 	/*
 	 * Make sure various things aren't screwed up.
 	 */
@@ -151,6 +147,7 @@ sys_reboot(int code)
 		md_poweroff();
 		break;
 	}
+
 	panic("reboot operation failed\n");
 	return 0;
 }

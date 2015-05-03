@@ -130,10 +130,4 @@ int __getcwd(char *buf, size_t buflen);
 char *getcwd(char *buf, size_t buflen);		/* calls __getcwd */
 time_t time(time_t *seconds);			/* calls __time */
 
-
-struct process* get_process (pid_t pid);
-void remove_all_exited_children (pid_t);
-
-
-
 #endif /* _UNISTD_H_ */

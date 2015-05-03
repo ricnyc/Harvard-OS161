@@ -8,19 +8,18 @@
 #define PAGE_SIZE  4096		/* size of VM page */
 #define PAGE_FRAME 0xfffff000	/* mask for getting page number from addr */
 
-/*
- * MIPS hardwired memory layout:
- *    0xc0000000 - 0xffffffff   kseg2 (kernel, tlb-mapped)
- *    0xa0000000 - 0xbfffffff   kseg1 (kernel, unmapped, uncached)
- *    0x80000000 - 0x9fffffff   kseg0 (kernel, unmapped, cached)
- *    0x00000000 - 0x7fffffff   kuseg (user, tlb-mapped)
- */
+
 
 #define MIPS_KUSEG  0x00000000
 #define MIPS_KSEG0  0x80000000
 #define MIPS_KSEG1  0xa0000000
 #define MIPS_KSEG2  0xc0000000
-
+#define stack_size 0x500000
+#define heap_size 0x500000
+#define LEVEL1_SIZE 512
+#define LEVEL2_SIZE 1024
+#define page_frame_mask 0x3ff
+#define malloc_limit 131072
 /* 
  * The first 512 megs of physical space can be addressed in both kseg0 and
  * kseg1. We use kseg0 for the kernel. This macro returns the kernel virtual
@@ -34,7 +33,7 @@
  * a valid address, and will make a *huge* mess if you scribble on it.
  */
 #define PADDR_TO_KVADDR(paddr) ((paddr)+MIPS_KSEG0)
-
+#define KVADDR_TO_PADDR(vaddr) ((vaddr)-MIPS_KSEG0)
 /*
  * The top of user space. (Actually, the address immediately above the
  * last valid user address.)
@@ -65,6 +64,12 @@
  * memory that cannot be freed later. This is intended for use early
  * in bootup before VM initialization is complete.
  */
+//This is only a global struct to for PM available
+struct {
+    u_int32_t  numofpage;
+    u_int32_t  free_pages_str;
+    struct coremap_entry* coremap_str;
+}coremap;
 
 void ram_bootstrap(void);
 paddr_t ram_stealmem(unsigned long npages);

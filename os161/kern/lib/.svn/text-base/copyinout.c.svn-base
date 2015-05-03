@@ -86,11 +86,13 @@ copycheck(const_userptr_t userptr, size_t len, size_t *stoplen)
 
 	if (top < bot) {
 		/* addresses wrapped around */
+		
 		return EFAULT;
 	}
 
 	if (bot >= USERTOP) {
 		/* region is within the kernel */
+		
 		return EFAULT;
 	}
 
@@ -121,6 +123,7 @@ copyin(const_userptr_t usersrc, void *dest, size_t len)
 	}
 	if (stoplen != len) {
 		/* Single block, can't legally truncate it. */
+
 		return EFAULT;
 	}
 
@@ -129,6 +132,7 @@ copyin(const_userptr_t usersrc, void *dest, size_t len)
 	result = setjmp(curthread->t_pcb.pcb_copyjmp);
 	if (result) {
 		curthread->t_pcb.pcb_badfaultfunc = NULL;
+	
 		return EFAULT;
 	}
 
@@ -157,12 +161,13 @@ copyout(const void *src, userptr_t userdest, size_t len)
 	}
 	if (stoplen != len) {
 		/* Single block, can't legally truncate it. */
+		
 		return EFAULT;
 	}
 
 	curthread->t_pcb.pcb_badfaultfunc = copyfail;
 
-	result = setjmp(curthread->t_pcb.pcb_copyjmp);
+	result = setjmp(curthread->t_pcb.pcb_copyjmp);//faulty line, setjmp returns a non-zero value
 	if (result) {
 		curthread->t_pcb.pcb_badfaultfunc = NULL;
 		return EFAULT;
@@ -236,6 +241,7 @@ copyinstr(const_userptr_t usersrc, char *dest, size_t len, size_t *actual)
 	result = setjmp(curthread->t_pcb.pcb_copyjmp);
 	if (result) {
 		curthread->t_pcb.pcb_badfaultfunc = NULL;
+		
 		return EFAULT;
 	}
 
@@ -269,6 +275,7 @@ copyoutstr(const char *src, userptr_t userdest, size_t len, size_t *actual)
 	result = setjmp(curthread->t_pcb.pcb_copyjmp);
 	if (result) {
 		curthread->t_pcb.pcb_badfaultfunc = NULL;
+		
 		return EFAULT;
 	}
 

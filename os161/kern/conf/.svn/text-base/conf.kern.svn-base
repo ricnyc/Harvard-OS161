@@ -372,7 +372,8 @@ file      thread/thread.c
 
 file      main/main.c
 file      main/menu.c
-file	  main/hello.c
+file      main/hello.c
+file  	  main/process_create.c
 
 #
 # User-level programming/system call support
@@ -383,14 +384,14 @@ file	  main/hello.c
 file      userprog/loadelf.c
 file      userprog/runprogram.c
 file      userprog/uio.c
-
+file      userprog/mem.c
 #
 # Virtual memory system
 # (you will probably want to add stuff here while doing the VM assignment)
 #
 
 optofffile dumbvm   vm/addrspace.c
-
+file		    vm/vm.c
 #
 # Network
 # (nothing here yet)

@@ -51,7 +51,7 @@ waitall(void)
 
 int
 main()
-{
+{	
 	hog();
 	hog();
 	hog();
@@ -60,5 +60,6 @@ main()
 	hog();
 
 	waitall();
+	
 	return 0;
 }

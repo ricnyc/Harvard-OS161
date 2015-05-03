@@ -10,6 +10,7 @@
 #include <curthread.h>
 #include <machine/spl.h>
 
+
 ////////////////////////////////////////////////////////////
 //
 // Semaphore.
@@ -102,7 +103,6 @@ struct lock *
 lock_create(const char *name)
 {
 	struct lock *lock;
-
 	lock = kmalloc(sizeof(struct lock));
 	if (lock == NULL) {
 		return NULL;
@@ -113,9 +113,8 @@ lock_create(const char *name)
 		kfree(lock);
 		return NULL;
 	}
-	
 	// add stuff here as needed
-	
+
 	return lock;
 }
 
@@ -130,30 +129,51 @@ lock_destroy(struct lock *lock)
 	kfree(lock);
 }
 
-void
-lock_acquire(struct lock *lock)
+void lock_acquire(struct lock *lock)
 {
-	// Write this
-
 	(void)lock;  // suppress warning until code gets written
+	assert(lock != NULL);
+	assert(!lock_do_i_hold(lock));
+	int spl;
+	spl = splhigh();
+	while(lock->held){
+		thread_sleep(lock);
+	}
+    	lock->held = 1;
+	lock->pointer = curthread;
+	splx(spl);
+	// Write this
 }
 
 void
 lock_release(struct lock *lock)
-{
-	// Write this
+{	// Write this
+	assert(lock != NULL);
+	//assert(lock_do_i_hold(lock));
+	int spl;
+	//lock->held = 0;	
+	//splx(spl);
+	spl = splhigh();
+	lock->held = 0;
+	thread_wakeup(lock);	
+	lock->pointer = NULL;
+	splx(spl);
+//	(void)lock;  // suppress warning until code gets written
 
-	(void)lock;  // suppress warning until code gets written
+
 }
 
 int
 lock_do_i_hold(struct lock *lock)
 {
 	// Write this
-
-	(void)lock;  // suppress warning until code gets written
-
-	return 1;    // dummy until code gets written
+	if(lock-> pointer == curthread){
+		return 1;
+	}else{
+		return 0;	
+	}
+	//(void)lock;  // suppress warning until code gets written
+	//return 1;    // dummy until code gets written
 }
 
 ////////////////////////////////////////////////////////////
@@ -197,6 +217,16 @@ void
 cv_wait(struct cv *cv, struct lock *lock)
 {
 	// Write this
+	assert(cv != NULL);
+	assert(lock != NULL);
+	assert(lock_do_i_hold(lock));
+	int spl;
+	spl = splhigh();
+	lock_release(lock);
+	thread_sleep(cv);
+	//thread_wakeup(cv);
+	lock_acquire(lock);
+	splx(spl);
 	(void)cv;    // suppress warning until code gets written
 	(void)lock;  // suppress warning until code gets written
 }
@@ -204,6 +234,14 @@ cv_wait(struct cv *cv, struct lock *lock)
 void
 cv_signal(struct cv *cv, struct lock *lock)
 {
+	assert(cv != NULL);
+	assert(lock != NULL);
+
+	int spl;
+	spl = splhigh();
+	//one_thread_wakeup(cv);
+	wakeup_single_thread(cv);
+	splx(spl);
 	// Write this
 	(void)cv;    // suppress warning until code gets written
 	(void)lock;  // suppress warning until code gets written
@@ -213,6 +251,13 @@ void
 cv_broadcast(struct cv *cv, struct lock *lock)
 {
 	// Write this
+	assert(cv != NULL);
+	assert(lock != NULL);
+
+	int spl;
+	spl = splhigh();
+	thread_wakeup(cv);
+	splx(spl);
 	(void)cv;    // suppress warning until code gets written
 	(void)lock;  // suppress warning until code gets written
 }

@@ -41,7 +41,7 @@ mallocthread(void *sm, unsigned long num)
 				V(sem);
 				return;
 			}
-			kprintf("kmalloc returned null; test failed.\n");			
+			kprintf("kmalloc returned null; test failed.\n");
 			return;
 		}
 		if (oldptr2) {

@@ -49,8 +49,6 @@ sfs_mapio(struct sfs_fs *sfs, enum uio_rw rw)
 
 	/* Pointer to our bitmap data in memory. */
 	bitdata = bitmap_getdata(sfs->sfs_freemap);
-
-	DEBUG(DB_SFS, "Bitmap blocks: %u ; Bitmap pointer: %p\n", mapsize, bitdata);
 	
 	/* For each sector in the bitmap... */
 	for (j=0; j<mapsize; j++) {

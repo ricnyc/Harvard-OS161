@@ -56,6 +56,7 @@ uiomove(void *ptr, size_t n, struct uio *uio)
 		    case UIO_USERSPACE:
 		    case UIO_USERISPACE:
 			    if (uio->uio_rw == UIO_READ) {
+			    	//kprintf("calling copyout uio\n");
 				    result = copyout(ptr, iov->iov_ubase,size);
 			    }
 			    else {

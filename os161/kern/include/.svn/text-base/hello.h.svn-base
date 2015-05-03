@@ -1,5 +1,5 @@
-#ifndef _HELLO_H
-#define _HELLO_H
-void hello(void);
+#ifndef _HELLO_H_
+#define _HELLO_H_
 
-#endif
+void hello(void);
+#endif /* _HELLO_H_ */
