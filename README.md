@@ -1,7 +1,7 @@
 # Harvard-OS161
 <h4>The code in this repository are my solutions for ECE344 labs at the University of Toronto. Please do not use it for your own course work, thank you.</h4> 
 <h4>Feel Free to email me if you have any questions about OS programming. We got full marks for 0-2 Assignment. Last assignment, we can pass 80 testcases.
-<a href="mailto:chuanrui.li@mail.utoronto.ca?Subject=CSC343" target="_top">Send me a mail</a></h4> 
+<a href="mailto:chuanrui.li@mail.utoronto.ca?Subject=ECE344" target="_top">Send me a mail</a></h4> 
 <h3>Assignment 0: An Introduction to OS161 </h3>
 <p>easy</p>
 
