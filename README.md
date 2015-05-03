@@ -1,5 +1,7 @@
 # Harvard-OS161
 <h3>Assignment 0: An Introduction to OS161 </h3>
+<p>easy</p>
+
 <h3>Assignment 1: Synchronization</h3>
 <p>Objectives:</p>
 <ul>
@@ -8,7 +10,8 @@
 <li>Be able to select an appropriate synchronization primitive for a given problem.</li>
 <li>Be able to properly synchronize different types of problems.</li>
 </ul>
-
+<p>Tips: 1, Implement the lock and CV first. 2, Think about the deadlock cases</p>
+<p>Suggestion: Cat problem - using locks, Intersection problem - using semaphore</p>
 <h3>Assignment 2: System Calls and Processes</h3>
 <p>Objectives:</p>
 <ul>
