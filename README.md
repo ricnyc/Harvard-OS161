@@ -23,7 +23,4 @@
 <ul>
 <li>Become familiar with OS handling of TLB and page faults.</li>
 <li>Develop a solid intuition about virtual memory and what it means to support it.</li>
-<li>Design and implement data structures to manage processes in an OS.</li>
-<li>Understand how to implement system calls.</li>
-<li>Understand how to use synchronization in OS code.</li>
 </ul>
