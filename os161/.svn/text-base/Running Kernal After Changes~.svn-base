@@ -1,0 +1,12 @@
+set path=( /cad2/ece344s/cs161/bin $path)
+
+cd ~/ece344/os161/kern/conf
+./config ASST0
+cd ..
+cd compile/ASST0
+make depend
+make
+make install
+cd ~/ece344/root
+sys161 kernel
+

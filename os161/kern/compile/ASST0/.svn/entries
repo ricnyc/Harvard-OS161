@@ -1,0 +1,156 @@
+10
+
+dir
+0
+svn+ssh://ug250.eecg.utoronto.ca/svn/os-007/svn/trunk/kern/compile/ASST0
+svn+ssh://ug250.eecg.utoronto.ca/svn/os-007/svn
+add
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10923513-996e-44eb-bd6f-07e5cace79ab
+
+autoconf.c
+file
+
+
+
+add
+
+vers.c
+file
+
+
+
+add
+
+machine
+file
+
+
+
+add
+
+
+
+
+
+has-props
+has-prop-mods
+
+svn:special
+
+autoconf.h
+file
+
+
+
+add
+
+depend.mk
+file
+
+
+
+add
+
+opt-netfs.h
+file
+
+
+
+add
+
+files.mk
+file
+
+
+
+add
+
+opt-net.h
+file
+
+
+
+add
+
+Makefile
+file
+
+
+
+add
+
+opt-synchprobs.h
+file
+
+
+
+add
+
+kernel
+file
+
+
+
+add
+
+
+
+
+
+has-props
+has-prop-mods
+
+opt-dumbvm.h
+file
+
+
+
+add
+
+opt-sfs.h
+file
+
+
+
+add
+
+version
+file
+
+
+
+add
+
+defs.mk
+file
+
+
+
+add
+
+.sockets
+dir
+
+
+
+add
+
