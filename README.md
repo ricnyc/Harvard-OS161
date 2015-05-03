@@ -1,4 +1,5 @@
 # Harvard-OS161
+<h3>Assignment 0: An Introduction to OS161 </h3>
 <h3>Assignment 1: Synchronization</h3>
 <p>Objectives:</p>
 <ul>
@@ -18,7 +19,7 @@
 <li>Understand how to use synchronization in OS code.</li>
 </ul>
 
-<h3>Assignment 2:  Virtual Memory</h3>
+<h3>Assignment 3:  Virtual Memory</h3>
 <p>Objectives:</p>
 <ul>
 <li>Become familiar with OS handling of TLB and page faults.</li>
